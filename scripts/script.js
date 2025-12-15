@@ -5,6 +5,7 @@ const modalBody = document.querySelector('.modalBody');
 const buttonExt = document.querySelector('#buttonExt');
 const confBtn = document.querySelector('#confBtn');
 const registrationForm = document.querySelector('.registrationForm');
+const loader = document.querySelector('#loader');
 
 const usernameLabel = document.querySelector('#usernameLabel');
 const usernameInput = document.querySelector('.usernameInput');
@@ -23,14 +24,19 @@ const ageUserInput = document.querySelector('.ageUserInput');
 
 const errorMessage = document.querySelector('#errorMessage');
 
-function renderStatusMessage(parent, data) {
+function renderStatusMessage(parent, input, data) {
   if (parent.lastElementChild?.nodeName === 'P') {
     parent.lastElementChild.remove();
   }
   const statusMessageElement = document.createElement('p');
   parent.appendChild(statusMessageElement);
-  statusMessageElement.textContent = data.text;
-  statusMessageElement.style.color = data.color;
+  if (data?.color && data?.text) {
+    statusMessageElement.textContent = data.text;
+    statusMessageElement.style.color = data.color;
+    if (input) input.style.borderColor = data.color;
+  } else if (input) {
+    input.style.border = '2px solid gray';
+  }
 }
 
 async function getUsers() {
@@ -47,13 +53,18 @@ async function getUsers() {
 
 async function addUser(user) {
   try {
-    const data = await fetch('https://dummyjson.com/users/add', { method: 'POST', body: user });
+    const data = await fetch('https://dummyjson.com/users/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: user,
+    });
     if (!data) {
       throw new Error('Data not found');
     }
+    const createdUser = await data.json();
     const resTest = responseValidation(data.status);
     if (resTest.success) {
-      return { message: 'User was created' };
+      return { createdUser, message: 'User was created' };
     } else return { error: resTest.error, messageError: resTest.messageError };
   } catch (error) {
     return error;
@@ -85,56 +96,41 @@ async function usernameValidation(value) {
       text: 'Такой логин уже существует',
       color: 'red',
     };
-  } else {
-    return {
-      text: '✓',
-      color: 'green',
-    };
   }
 }
 
 function passwordValidation(value) {
   const ckeckSymbol = checkOnSymbol(value);
-  return value.length >= 6 && ckeckSymbol
-    ? {
-        text: '✓',
-        color: 'green',
-      }
-    : {
-        text: 'Пароль должен быть более 6 символов и иметь специальные символы - _ * + $ # ^ @',
-        color: 'red',
-      };
+  if (value.length < 6 || !ckeckSymbol) {
+    return {
+      text: 'Пароль должен быть более 6 символов и иметь специальные символы - _ * + $ # ^ @',
+      color: 'red',
+    };
+  }
 }
 
 function passwordsEqual(pass, confPass) {
   if (pass !== confPass) {
     return { text: 'Пароли должны совпадать', color: 'red' };
-  } else return { text: '✓', color: 'green' };
+  }
 }
 
 function emailValidation(value) {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailPattern.test(value)
-    ? {
-        text: '✓',
-        color: 'green',
-      }
-    : {
-        text: 'Эмейл должен совпадать с шаблоном email@domain.tld',
-        color: 'red',
-      };
+  if (!emailPattern.test(value))
+    return {
+      text: 'Эмейл должен совпадать с шаблоном email@domain.tld',
+      color: 'red',
+    };
+  return emailPattern.test(value);
 }
 
 function ageValidation(value) {
-  return Number(value) >= 18 && Number(value) <= 100
-    ? {
-        text: '✓',
-        color: 'green',
-      }
-    : {
-        text: 'Возраст должен быть в диапазоне от 18 до 100',
-        color: 'red',
-      };
+  if (Number(value) < 18 || Number(value) > 100)
+    return {
+      text: 'Возраст должен быть в диапазоне от 18 до 100',
+      color: 'red',
+    };
 }
 
 function responseValidation(res) {
@@ -152,6 +148,9 @@ const toggleModalWindow = () => {
 const toggleSuccessWindow = () => {
   successWindow.classList.toggle('modalHidden');
 };
+const toggleLoader = () => {
+  loader.classList.toggle('loader');
+};
 
 openModalBtn.addEventListener('click', toggleModalWindow);
 modal.addEventListener('click', toggleModalWindow);
@@ -166,44 +165,54 @@ registrationForm.addEventListener('reset', toggleModalWindow);
 registrationForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const dataForm = new FormData(registrationForm);
-  let newUser = {
+  const newUser = {
     username: dataForm.get('username'),
     email: dataForm.get('email'),
-    pasword: dataForm.get('password'),
+    password: dataForm.get('password'),
     firstName: dataForm.get('firstName'),
     lastName: dataForm.get('lastName'),
     age: dataForm.get('age'),
   };
-  const res = await addUser(newUser);
+  confBtn.disabled = true;
+  toggleLoader();
+  confBtn.textContent = 'Отправка...';
+  const res = await addUser(JSON.stringify(newUser));
+  confBtn.disabled = false;
+  toggleLoader();
+  confBtn.textContent = 'Регистрация';
   if (res.message) {
-    toggleModalWindow();
+    registrationForm.reset();
+    console.log(res.createdUser);
     toggleSuccessWindow();
     setTimeout(() => {
       toggleSuccessWindow();
     }, 2000);
   } else {
-    renderStatusMessage(errorMessage, { text: `${res.error}:${res.messageError}`, color: 'red' });
+    renderStatusMessage(errorMessage, null, {
+      text: `${res.error}:${res.messageError}`,
+      color: 'red',
+    });
   }
 });
 
 // input events
 emailInput.addEventListener('input', (event) => {
   const statusData = emailValidation(event.target.value);
-  renderStatusMessage(emailLabel, statusData);
+  renderStatusMessage(emailLabel, emailInput, statusData);
 });
 passwordInput.addEventListener('input', (event) => {
   const statusData = passwordValidation(event.target.value);
-  renderStatusMessage(passwordLabel, statusData);
+  renderStatusMessage(passwordLabel, passwordInput, statusData);
 });
 confPasswordInput.addEventListener('input', (event) => {
   const statusData = passwordsEqual(event.target.value, passwordInput.value);
-  renderStatusMessage(confPasswordLabel, statusData);
+  renderStatusMessage(confPasswordLabel, confPasswordInput, statusData);
 });
 ageUserInput.addEventListener('input', (event) => {
   const statusData = ageValidation(event.target.value);
-  renderStatusMessage(ageUserLabel, statusData);
+  renderStatusMessage(ageUserLabel, ageUserInput, statusData);
 });
 usernameInput.addEventListener('input', async (event) => {
   const statusData = await usernameValidation(event.target.value);
-  renderStatusMessage(usernameLabel, statusData);
+  renderStatusMessage(usernameLabel, usernameInput, statusData);
 });

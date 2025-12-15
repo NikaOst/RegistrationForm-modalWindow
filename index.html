@@ -10,6 +10,7 @@
   <body>
     <button class="openModalBtn">Зарегистрироваться</button>
     <div id="modalReg" class="modal modalHidden">
+      <span id="loader"></span>
       <div class="modalBody">
         <i id="buttonExt" class="fa-solid fa-xmark"></i>
         <form class="registrationForm">
@@ -70,7 +71,7 @@
             <input type="checkbox" name="politic" class="politicCheckbox" required />
             <span>Я согласен с условиями использования</span>
           </div>
-          <div>
+          <div class="buttonContainer">
             <button id="resetBtn" type="reset">Отмена</button
             ><button id="confBtn" type="submit">Зарегистироваться</button>
           </div>
