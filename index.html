@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://kit.fontawesome.com/6e51d6c25a.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./styles/style.css" />
+  </head>
+  <body>
+    <button class="openModalBtn">Зарегистрироваться</button>
+    <div class="modal modalHidden">
+      <div class="modalBody">
+        <i id="buttonExt" class="fa-solid fa-xmark"></i>
+        <form class="registrationForm">
+          <label id="usernameLabel"
+            ><input
+              type="text"
+              name="username"
+              class="usernameInput"
+              placeholder="Username"
+              required
+          /></label>
+
+          <label id="emailLabel">
+            <input type="email" name="email" class="emailInput" placeholder="Email" required
+          /></label>
+
+          <label id="passwordLabel">
+            <input
+              type="password"
+              name="password"
+              class="passwordInput"
+              placeholder="Password"
+              required
+          /></label>
+
+          <label id="confPasswordLabel">
+            <input
+              type="password"
+              name="confPassword"
+              class="confPasswordInput"
+              placeholder="Confirm password"
+              required
+          /></label>
+
+          <label id="firstNameLabel"
+            ><input
+              type="text"
+              name="firstName"
+              class="firstNameInput"
+              placeholder="First name"
+              required
+          /></label>
+
+          <label id="lastNameLabel">
+            <input
+              type="text"
+              name="lastName"
+              class="lastNameInput"
+              placeholder="Last name"
+              required
+          /></label>
+
+          <label id="ageUserLabel"
+            ><input type="number" name="ageUser" class="ageUserInput" placeholder="Age" required
+          /></label>
+
+          <div>
+            <input type="checkbox" name="politic" class="politicCheckbox" required />
+            <span>Я согласен с условиями использования</span>
+          </div>
+          <button id="resetBtn" type="reset">Отмена</button>
+        </form>
+      </div>
+    </div>
+  </body>
+  <script src="/scripts/script.js"></script>
+</html>
