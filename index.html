@@ -9,7 +9,7 @@
   </head>
   <body>
     <button class="openModalBtn">Зарегистрироваться</button>
-    <div class="modal modalHidden">
+    <div id="modalReg" class="modal modalHidden">
       <div class="modalBody">
         <i id="buttonExt" class="fa-solid fa-xmark"></i>
         <form class="registrationForm">
@@ -63,7 +63,7 @@
           /></label>
 
           <label id="ageUserLabel"
-            ><input type="number" name="ageUser" class="ageUserInput" placeholder="Age" required
+            ><input type="number" name="age" class="ageUserInput" placeholder="Age" required
           /></label>
 
           <div>
@@ -74,7 +74,13 @@
             <button id="resetBtn" type="reset">Отмена</button
             ><button id="confBtn" type="submit">Зарегистироваться</button>
           </div>
+          <label id="errorMessage"></label>
         </form>
+      </div>
+    </div>
+    <div id="successWindow" class="modal modalHidden">
+      <div class="modalSuccess">
+        <h1>User was created!</h1>
       </div>
     </div>
   </body>

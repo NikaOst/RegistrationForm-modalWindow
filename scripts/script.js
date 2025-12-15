@@ -1,5 +1,6 @@
 const openModalBtn = document.querySelector('.openModalBtn');
-const modal = document.querySelector('.modal');
+const modal = document.querySelector('#modalReg');
+const successWindow = document.querySelector('#successWindow');
 const modalBody = document.querySelector('.modalBody');
 const buttonExt = document.querySelector('#buttonExt');
 const confBtn = document.querySelector('#confBtn');
@@ -17,17 +18,13 @@ const passwordInput = document.querySelector('.passwordInput');
 const confPasswordLabel = document.querySelector('#confPasswordLabel');
 const confPasswordInput = document.querySelector('.confPasswordInput');
 
-// const firstNameLabel = document.querySelector('#firstNameLabel');
-// const firstNameInput = document.querySelector('.firstNameInput');
-
-// const lastNameLabel = document.querySelector('#lastNameLabel');
-// const lastNameInput = document.querySelector('.lastNameInput');
-
 const ageUserLabel = document.querySelector('#ageUserLabel');
 const ageUserInput = document.querySelector('.ageUserInput');
 
+const errorMessage = document.querySelector('#errorMessage');
+
 function renderStatusMessage(parent, data) {
-  if (parent.lastElementChild.nodeName === 'P') {
+  if (parent.lastElementChild?.nodeName === 'P') {
     parent.lastElementChild.remove();
   }
   const statusMessageElement = document.createElement('p');
@@ -43,6 +40,21 @@ async function getUsers() {
       throw new Error('Data not found');
     }
     return await data.json();
+  } catch (error) {
+    return error;
+  }
+}
+
+async function addUser(user) {
+  try {
+    const data = await fetch('https://dummyjson.com/users/add', { method: 'POST', body: user });
+    if (!data) {
+      throw new Error('Data not found');
+    }
+    const resTest = responseValidation(data.status);
+    if (resTest.success) {
+      return { message: 'User was created' };
+    } else return { error: resTest.error, messageError: resTest.messageError };
   } catch (error) {
     return error;
   }
@@ -70,12 +82,12 @@ async function usernameValidation(value) {
     }) !== undefined
   ) {
     return {
-      text: 'username is already taken',
+      text: 'Такой логин уже существует',
       color: 'red',
     };
   } else {
     return {
-      text: 'username is correct',
+      text: '✓',
       color: 'green',
     };
   }
@@ -85,50 +97,62 @@ function passwordValidation(value) {
   const ckeckSymbol = checkOnSymbol(value);
   return value.length >= 6 && ckeckSymbol
     ? {
-        text: 'password is correct',
+        text: '✓',
         color: 'green',
       }
     : {
-        text: 'password is invalid',
+        text: 'Пароль должен быть более 6 символов и иметь специальные символы - _ * + $ # ^ @',
         color: 'red',
       };
 }
 
 function passwordsEqual(pass, confPass) {
   if (pass !== confPass) {
-    return { text: 'password is invalid', color: 'red' };
-  } else return { text: 'Пароли должны совпадать', color: 'green' };
+    return { text: 'Пароли должны совпадать', color: 'red' };
+  } else return { text: '✓', color: 'green' };
 }
 
 function emailValidation(value) {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailPattern.test(value)
     ? {
-        text: 'email is correct',
+        text: '✓',
         color: 'green',
       }
     : {
-        text: 'email is invalid',
+        text: 'Эмейл должен совпадать с шаблоном email@domain.tld',
         color: 'red',
       };
 }
 
 function ageValidation(value) {
-  return Number(value) >= 10 && Number(value) <= 100
+  return Number(value) >= 18 && Number(value) <= 100
     ? {
-        text: 'age is correct',
+        text: '✓',
         color: 'green',
       }
     : {
-        text: 'age is invalid',
+        text: 'Возраст должен быть в диапазоне от 18 до 100',
         color: 'red',
       };
+}
+
+function responseValidation(res) {
+  if (res >= 200 && res <= 299) {
+    return { success: true, error: null, messageError: null };
+  } else if (res >= 400 && res <= 499) {
+    return { success: false, error: `Error ${res}`, messageError: 'Server Error' };
+  } else return { success: false, error: `Error ${res}`, messageError: 'Network Error' };
 }
 
 // modal window
 const toggleModalWindow = () => {
   modal.classList.toggle('modalHidden');
 };
+const toggleSuccessWindow = () => {
+  successWindow.classList.toggle('modalHidden');
+};
+
 openModalBtn.addEventListener('click', toggleModalWindow);
 modal.addEventListener('click', toggleModalWindow);
 modalBody.addEventListener('click', (e) => e.stopPropagation());
@@ -139,6 +163,28 @@ document.addEventListener('keydown', (e) => {
   }
 });
 registrationForm.addEventListener('reset', toggleModalWindow);
+registrationForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const dataForm = new FormData(registrationForm);
+  let newUser = {
+    username: dataForm.get('username'),
+    email: dataForm.get('email'),
+    pasword: dataForm.get('password'),
+    firstName: dataForm.get('firstName'),
+    lastName: dataForm.get('lastName'),
+    age: dataForm.get('age'),
+  };
+  const res = await addUser(newUser);
+  if (res.message) {
+    toggleModalWindow();
+    toggleSuccessWindow();
+    setTimeout(() => {
+      toggleSuccessWindow();
+    }, 2000);
+  } else {
+    renderStatusMessage(errorMessage, { text: `${res.error}:${res.messageError}`, color: 'red' });
+  }
+});
 
 // input events
 emailInput.addEventListener('input', (event) => {
@@ -159,6 +205,5 @@ ageUserInput.addEventListener('input', (event) => {
 });
 usernameInput.addEventListener('input', async (event) => {
   const statusData = await usernameValidation(event.target.value);
-  console.log(statusData);
   renderStatusMessage(usernameLabel, statusData);
 });
