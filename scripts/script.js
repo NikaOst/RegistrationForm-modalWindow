@@ -24,7 +24,7 @@ const ageUserInput = document.querySelector('.ageUserInput');
 
 const errorMessage = document.querySelector('#errorMessage');
 
-function renderStatusMessage(parent, input, data) {
+function renderValidationStatus(parent, input, data) {
   if (parent.lastElementChild?.nodeName === 'P') {
     parent.lastElementChild.remove();
   }
@@ -152,6 +152,12 @@ const toggleLoader = () => {
   loader.classList.toggle('loader');
 };
 
+function renderWaitingFunc(btnStatus, btnText) {
+  confBtn.disabled = btnStatus;
+  toggleLoader();
+  confBtn.textContent = btnText;
+}
+
 openModalBtn.addEventListener('click', toggleModalWindow);
 modal.addEventListener('click', toggleModalWindow);
 modalBody.addEventListener('click', (e) => e.stopPropagation());
@@ -173,13 +179,11 @@ registrationForm.addEventListener('submit', async (event) => {
     lastName: dataForm.get('lastName'),
     age: dataForm.get('age'),
   };
-  confBtn.disabled = true;
-  toggleLoader();
-  confBtn.textContent = 'Отправка...';
+
+  renderWaitingFunc(true, 'Отправка...');
   const res = await addUser(JSON.stringify(newUser));
-  confBtn.disabled = false;
-  toggleLoader();
-  confBtn.textContent = 'Регистрация';
+  renderWaitingFunc(false, 'Регистрация');
+
   if (res.message) {
     registrationForm.reset();
     console.log(res.createdUser);
@@ -188,7 +192,7 @@ registrationForm.addEventListener('submit', async (event) => {
       toggleSuccessWindow();
     }, 2000);
   } else {
-    renderStatusMessage(errorMessage, null, {
+    renderValidationStatus(errorMessage, null, {
       text: `${res.error}:${res.messageError}`,
       color: 'red',
     });
@@ -198,21 +202,21 @@ registrationForm.addEventListener('submit', async (event) => {
 // input events
 emailInput.addEventListener('input', (event) => {
   const statusData = emailValidation(event.target.value);
-  renderStatusMessage(emailLabel, emailInput, statusData);
+  renderValidationStatus(emailLabel, emailInput, statusData);
 });
 passwordInput.addEventListener('input', (event) => {
   const statusData = passwordValidation(event.target.value);
-  renderStatusMessage(passwordLabel, passwordInput, statusData);
+  renderValidationStatus(passwordLabel, passwordInput, statusData);
 });
 confPasswordInput.addEventListener('input', (event) => {
   const statusData = passwordsEqual(event.target.value, passwordInput.value);
-  renderStatusMessage(confPasswordLabel, confPasswordInput, statusData);
+  renderValidationStatus(confPasswordLabel, confPasswordInput, statusData);
 });
 ageUserInput.addEventListener('input', (event) => {
   const statusData = ageValidation(event.target.value);
-  renderStatusMessage(ageUserLabel, ageUserInput, statusData);
+  renderValidationStatus(ageUserLabel, ageUserInput, statusData);
 });
 usernameInput.addEventListener('input', async (event) => {
   const statusData = await usernameValidation(event.target.value);
-  renderStatusMessage(usernameLabel, usernameInput, statusData);
+  renderValidationStatus(usernameLabel, usernameInput, statusData);
 });
